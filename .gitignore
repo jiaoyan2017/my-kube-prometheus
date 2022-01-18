@@ -1,0 +1,9 @@
+tmp/
+minikube-manifests/
+vendor/
+./auth
+.swp
+.bak
+crdschemas/
+
+.gitpod/_output/

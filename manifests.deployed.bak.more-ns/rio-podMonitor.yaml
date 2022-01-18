@@ -1,0 +1,48 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    #app.kubernetes.io/name: kubernetes-pods
+    team: frontend
+  name: rio-podmonitor
+  namespace: rio
+spec:
+  podMetricsEndpoints:
+  - metricRelabelings:
+    - regex: '(checksum|kubernetes_pod_name|system_version|version)'
+      action: labeldrop
+  #- path: /metrics
+  #- port: http
+  - relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      action: keep
+      regex: "true"
+    - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+      action: replace
+      targetLabel: __metrics_path__
+      regex: (.+)
+    - sourceLabels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+      action: replace
+      regex: ([^:]+)(?::\d+)?;(\d+)
+      replacement: $1:$2
+      targetLabel: __address__
+    - action: labelmap
+      regex: __meta_kubernetes_pod_label_(.+)
+    - sourceLabels: [__meta_kubernetes_namespace]
+      action: keep
+      regex: ^(rio-fmc2|rio)
+    - sourceLabels: [__meta_kubernetes_namespace]
+      action: replace
+      targetLabel: kubernetes_namespace
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      action: replace
+      targetLabel: kubernetes_pod_name
+  - scheme: http
+  - tlsConfig:
+      insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+    - rio
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: rio

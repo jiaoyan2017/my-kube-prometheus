@@ -1,0 +1,711 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 2.29.1
+    prometheus: k8s
+    role: alert-rules
+  name: prometheus-k8s-alert-rules
+  namespace: rio
+spec:
+  groups:
+  - name: rio-alert-rules
+    rules:
+    - alert: Duration Too Long
+      expr: job:http_request_duration:rounded_average{SpanName="DoSegmentReq",site_type!='lab'} > 1000
+      for: 1h
+      labels:
+        severity: minor
+        service: '{{ $labels.app }} {{ $labels.job }}'
+        spanName: '{{ $labels.SpanName }}'
+        instance: '{{ $labels.instance }} {{ $labels.SpanName }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          Do Segment Request (from Cleversafe) (ms) duration too long
+        description: |-
+          Site: {{ $labels.site }}
+          Do Segment Request (from Cleversafe) alert raised since the avg. duration {{ $value }} (ms) for the operation has exceeded the threshold of 1000 (ms)
+    - alert: Duration Too Long
+      expr: job:http_request_duration:rounded_average{SpanName=~"GetSegment|PutSegment|Recon IRID",site_type!='lab'} > 500
+      for: 1h
+      labels:
+        severity: minor
+        service: '{{ $labels.app }} {{ $labels.job }}'
+        spanName: '{{ $labels.SpanName }}'
+        instance: '{{ $labels.instance }} {{ $labels.SpanName }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          {{ if eq $labels.SpanName "GetSegment" }}{{ $labels.SpanName }} (from Pillar){{ else if eq $labels.SpanName "PutSegment" }}{{ $labels.SpanName }} (to Cleversafe){{ else if eq $labels.SpanName "Recon IRID" }}Full Recon request{{ else }}{{ $labels.SpanName }}{{ end }} (ms) duration too long
+        description: |-
+          Site: {{ $labels.site }}
+          {{ if eq $labels.SpanName "GetSegment" }} {{ $labels.SpanName }} (from Pillar){{ else if eq $labels.SpanName "PutSegment" }}{{ $labels.SpanName }} (to Cleversafe){{ else if eq $labels.SpanName "Recon IRID" }}Full Recon request{{ else }}{{ $labels.SpanName }}{{ end }} alert raised since the avg. duration {{ $value }} (ms) for the operation has exceeded the threshold of 500 (ms)
+    - alert: Duration Too Long
+      expr: job:http_service_duration:rounded_average{SpanName="Segment Storer Handler",site_type!='lab'} > 1800
+      for: 2m
+      labels:
+        severity: major
+        service: '{{ $labels.app }} {{ $labels.job }}'
+        spanName: '{{ $labels.SpanName }}'
+        instance: '{{ $labels.instance }} {{ $labels.SpanName }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          {{ if eq $labels.SpanName "Segment Storer Handler" }}Store Segment (MA request){{ else }}{{ $labels.SpanName }}{{ end }} (ms) duration too long
+        description: |-
+          Site: {{ $labels.site }}
+          {{ if eq $labels.SpanName "Segment Storer Handler" }}Store Segment (MA request){{ else }}{{ $labels.SpanName }}{{ end }} alert raised since the avg. duration {{ $value }} (ms) for the operation has exceeded the threshold of 1800 (ms)
+    - alert: Duration Too Long
+      expr: job:http_service_duration:rounded_average{SpanName="ServeManifest",site_type!='lab'} > 2000
+      for: 2m
+      labels:
+        severity: major
+        service: '{{ $labels.app }} {{ $labels.job }}'
+        spanName: '{{ $labels.SpanName }}'
+        instance: '{{ $labels.instance }} {{ $labels.SpanName }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          {{ $labels.SpanName }} (Super8 request) (ms) duration too long
+        description: |-
+          Site: {{ $labels.site }}
+          {{ $labels.SpanName }} (Super8 request) alert raised since the avg. duration {{ $value }} (ms) for the operation has exceeded the threshold of 2000 (ms)
+    - alert: Duration Too Long
+      expr: job:http_service_duration:rounded_average{SpanName="ServeSegment",site_type!='lab'} > 500
+      for: 2m
+      labels:
+        severity: major
+        service: '{{ $labels.app }} {{ $labels.job }}'
+        spanName: '{{ $labels.SpanName }}'
+        instance: '{{ $labels.instance }} {{ $labels.SpanName }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          {{ $labels.SpanName }} (Super8 request) (ms) duration too long
+        description: |-
+          Site: {{ $labels.site }}
+          {{ $labels.SpanName }} (Super8 request) alert raised since the avg. duration {{ $value }} (ms) for the operation has exceeded the threshold of 500 (ms)
+    - alert: Failure Percentage Greater Than 5
+      expr: job:http_request_duration:fail_percent{SpanName=~"GetSegment|PutSegment|DoSegmentReq|Recon IRID",site_type!='lab'} > 5
+      for: 1h
+      labels:
+        severity: minor
+        service: '{{ $labels.app }} {{ $labels.job }}'
+        spanName: '{{ $labels.SpanName }}'
+        instance: '{{ $labels.instance }} {{ $labels.SpanName }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          {{ if eq $labels.SpanName "GetSegment" }}{{ $labels.SpanName }} (from Pillar){{ else if eq $labels.SpanName "PutSegment" }}{{ $labels.SpanName }} (to Cleversafe){{ else if eq $labels.SpanName "DoSegmentReq" }}Do Segment Request (from Cleversafe){{ else if eq $labels.SpanName "Recon IRID" }}Full Recon request{{ else }}{{ $labels.SpanName }}{{ end }} Failure Percentage Too High
+        description: |-
+          Site: {{ $labels.site }}
+          {{ if eq $labels.SpanName "GetSegment" }}{{ $labels.SpanName }} (from Pillar){{ else if eq $labels.SpanName "PutSegment" }}{{ $labels.SpanName }} (to Cleversafe){{ else if eq $labels.SpanName "DoSegmentReq" }}Do Segment Request (from Cleversafe){{ else if eq $labels.SpanName "Recon IRID" }}Full Recon request{{ else }}{{ $labels.SpanName }}{{ end }} Failure Percentage alert raised since the failure percent {{ $value | humanize }}%, has exceeded the threshold of 5%
+    - alert: Failure Percentage Greater Than 5
+      expr: job:http_service_duration:fail_percent{SpanName=~"ServeManifest|ServeSegment|Segment Storer Handler",site_type!='lab'} > 5
+      for: 2m
+      labels:
+        severity: major
+        service: '{{ $labels.app }} {{ $labels.job }}'
+        spanName: '{{ $labels.SpanName }}'
+        instance: '{{ $labels.instance }} {{ $labels.SpanName }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          {{ if match $labels.SpanName "ServeManifest|ServeSegment" }}{{ $labels.SpanName }} (Super8 request){{ else if eq $labels.SpanName "Segment Storer Handler"}}Store Segment (MA request){{ else }}{{ $labels.SpanName }}{{ end }} Failure Percentage Too High
+        description: |-
+          Site: {{ $labels.site }}
+          {{ if match $labels.SpanName "ServeManifest|ServeSegment" }}{{ $labels.SpanName }} (Super8 request){{ else if eq $labels.SpanName "Segment Storer Handler"}}Store Segment (MA request){{ else }}{{ $labels.SpanName }}{{ end }} Failure Percentage alert raised since the failure percent {{ $value | humanize }}%, has exceeded the threshold of 5%
+    - alert: No Recording Activity
+      expr: job:rio_http_service_success:success_percent{site_type!='lab'} < 1
+      for: 5m
+      labels:
+        severity: critical
+        service: '{{ $labels.app }} {{ $labels.job }}'
+        spanName: '{{ $labels.SpanName }}'
+        instance: '{{ $labels.instance }} {{ $labels.SpanName }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          No recording activity
+        description: |-
+          Site: {{ $labels.site }}
+          No recording activity observed in Segment Recorder Store Segments Requests
+    - alert: Decode Success Percentage Less Than 99
+      expr: job:rio_fmc2_decoder_http_request_success_percent:rounded{site_type!='lab'}  < 99
+      for: 5m
+      labels:
+        app: decoder
+        severity: critical
+        service: '{{ $labels.app }}'
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}.
+          App: {{ $labels.app }}. Decode success rate is lower.
+        description: |-
+          Site: {{ $labels.site }}.
+          App: {{ $labels.app }}. Decode success rate is less than 99% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: Decode HTTP Response Too Long
+      expr: job:rio_fmc2_decoder_http_response:rounded{site_type!='lab'}  > 2000
+      for: 5m
+      labels:
+        app: decoder
+        severity: major
+        service: '{{ $labels.app }}'
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}.
+          App: {{ $labels.app }}. Decoder response time is too long.
+        description: |-
+          Site: {{ $labels.site }}.
+          App: {{ $labels.app }}. Decoder response time is longer than 2 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: Cleversafe HTTP Request Duration Too Long
+      expr: job:rio_fmc2_decoder_cleversafe_http_response:rounded{site_type!='lab'} > 2000
+      for: 5m
+      labels:
+        app: decoder
+        severity: major
+        service: '{{ $labels.app }}'
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response time is longer than 2 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: Cleversafe HTTP Request Success Percentage Less Than 99
+      expr: job:rio_fmc2_decoder_cleversafe_http_request_success_percent:rounded{site_type!='lab'} < 99
+      for: 5m
+      labels:
+        app: decoder
+        severity: major
+        service: '{{ $labels.app }}'
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response success rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response success rate is less than 99% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: Cleversafe HTTP Request Duration Too Long
+      expr: job:rio_fmc2_encoder_cleversafe_http_request_duration{site_type!='lab'} > 2000
+      for: 5m
+      labels:
+        app: encoder
+        severity: major
+        service: '{{ $labels.app }}'
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response time is longer than 2 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: FMC2 Cleversafe HTTP Request Success Percentage Less Than 99
+      expr: job:rio_fmc2_encoder_cleversafe_http_success_percent:rounded{site_type!="lab"} < 99
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe http success rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe http success rate is less than 99% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: Piller HTTP Request Duration Too Long
+      expr: job:rio_fmc2_encoder_pillar_http_request_duration:rounded{site_type!='lab'} > 1000
+      for: 5m
+      labels:
+        app: encoder
+        severity: major
+        service: '{{ $labels.app }}'
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Piller response time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Pillar response time is longer than 2 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: FMC2 Pillar HTTP Request Success Percentage Less Than 99
+      expr: job:rio_fmc2_encoder_pillar_http_success_percent:rounded{site_type!="lab"} < 99
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Pillar http success rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Pillar http success rate is less than 99% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: FA Publish To NSS Success Percentage Less Than 99
+      expr: job:rio_rccs_fa_publish_segment_bundle_success_percent:rounded{site_type!="lab"} < 99
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Segment bundle publishing success rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Segment bundle publishing success rate is lower in past 5 minutes. (current value is: {{ $value }})
+    - alert: RCCS Decode Success Percentage Less Than 99
+      expr: job:rio_rccs_serve_http_request_success_percent:rounded{app="rccs_decoder", layer="service", site_type!="lab"}  < 99
+      for: 5m
+      labels:
+        severity: critical
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}.
+          App: {{ $labels.app }} success rate is lower.
+        description: |-
+          Site: {{ $labels.site }}.
+          App: {{ $labels.app }} success rate is less than 99% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: RCCS Decode Request Rate Large Than 800
+      expr: sum(job:rio_rccs_serve_http_request_rate:rounded{app="rccs_decoder",layer="service",site_type!="lab"}) by (app) / count:rio_rccs_pod_num{app="rccs_decoder"} > 800
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }} request TPS is higher.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }} request TPS is larger than 800 in past 5 minutes. (current value is: {{ $value }})
+    - alert: RCCS Decode HTTP Response Too Long
+      expr: job:rio_rccs_server_http_response:rounded{app="rccs_decoder", layer="service", site_type!="lab"}  > 2000
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}.
+          App: {{ $labels.app }} response time is too long.
+        description: |-
+          Site: {{ $labels.site }}.
+          App: {{ $labels.app }} response time is longer than 2 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: RCCS Cleversafe HTTP Request Duration Too Long
+      expr: job:rio_rccs_cleversafe_http_response:rounded{app="rccs_decoder", layer="service", site_type!="lab"} > 1000
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response time is longer than 1 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: RCCS Cleversafe HTTP Request Success Percentage Less Than 99
+      expr: job:rio_rccs_cleversafe_http_success_percent:rounded{site_type!="lab", layer="service"} < 99
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response success rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response success rate is less than 99% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: RCCS Encode Success Percentage Less Than 99
+      expr: job:rio_rccs_serve_http_request_success_percent:rounded{app="rccs_encoder", layer="service", site_type!="lab"} < 99
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }} success rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }} success rate is less than 99% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: RCCS Encode Request Rate Less Than 10
+      expr: job:rio_rccs_serve_http_request_rate:rounded{app="rccs_encoder", layer="service",site_type!="lab"}  < 10
+      for: 5m
+      labels:
+        severity: minor
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }} request per second is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }} request per second is less than 10 in past 5 minute. (current value is: {{ $value }})
+    - alert: RCCS Encode HTTP Response Too Long
+      expr: job:rio_rccs_server_http_response:rounded{app="rccs_encoder", layer="service", site_type!="lab"}  > 2000
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }} response time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }} response time is longer than 2 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: RCCS User Data Compression Percentage Less Than 95
+      expr: job:rio_rccs_encoder_user_compression_percent:rounded{site_type!="lab"} < 95
+      for: 5m
+      labels:
+        severity: critical
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. RCCS compression rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. RCCS compression rate is less than 95% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: RCCS Pillar HTTP Request Duration Too Long
+      expr: job:rio_rccs_pillar_http_response:rounded{site_type!="lab"} > 1000
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Pillar response time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Pillar response time is longer than 1 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: RCCS Pillar HTTP Request Success Percentage Less Than 99
+      expr: job:rio_rccs_pillar_http_success_percent:rounded{site_type!="lab"} < 99
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Pillar http success rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Pillar http success rate is less than 99% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: RCCS Cleversafe HTTP Request Duration Too Long
+      expr: job:rio_rccs_cleversafe_http_response:rounded{app="rccs_encoder", site_type!="lab"} > 500
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response time is longer than 500 milliseconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: FMC2 Encode Success Percentage Less Than 99
+      expr: job:rio_fmc2_encoder_http_request_success_percent:rounded{site_type!="lab"} < 99
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Encoder success rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Encoder success rate is less than 99% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: FMC2 Encode Request Rate Less Than 10
+      expr: job:rio_fmc2_encoder_http_request_rate:rounded{site_type!="lab"}  < 10
+      for: 5m
+      labels:
+        severity: minor
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Encoder requst per second is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Encoder requst per second is less than 10 in past 30 minutes. (current value is: {{ $value }})
+    - alert: FMC2 Encode HTTP Response Too Long
+      expr: job:rio_fmc2_encoder_http_response:rounded{site_type!="lab"} > 2000
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Encoder response time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Encoder response time is longer than 2 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: FMC2 User Data Compression Percentage Less Than 50
+      expr: job:rio_fmc2_encoder_user_compression_percent:rounded{site_type!="lab"} < 50
+      for: 5m
+      labels:
+        severity: critical
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. FMC2 compression rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. FMC2 compression rate is less than 50% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: FMC2 Cleversafe HTTP Request Duration Too Long
+      expr: job:rio_fmc2_encoder_cleversafe_http_client_duration:rounded{site_type!="lab"} > 2000
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Cleversafe response time is longer than 2 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: FMC2 Pillar HTTP Request Duration Too Long
+      expr: job:rio_fmc2_encoder_pillar_http_client_duration:rounded{site_type!="lab"} > 1000
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Pillar response time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Pillar response time is longer than 1 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: RCCS Disposer Job Complete Rate Is Lower than 90
+      expr: job:rio_rccs_disposer_job_finished_percent:rounded{site_type!="lab"} < 90
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}%'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Disposer job finish rate is lower.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Disposer job finish rate is lower than 90% in past 5 minutes. (current value is: {{ $value }}%)
+    - alert: RCCS Disposer Memsql Delete Operation Too Long
+      expr: job:rio_rccs_disposer_memsql_delete_duration:rounded{site_type!="lab"} > 300
+      for: 5m
+      labels:
+        severity: major
+        instance: '{{ $labels.instance }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }} (ms)'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Disposer delete operation time is too long.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Disposer delete operation time is longer than 300 seconds in past 5 minutes. (current value is: {{ $value }} milliseconds)
+    - alert: RCCS Earliest Segment Is Older Than 96 Hours
+      expr: sum(time() - rio_rccs_segment_earliest_second{site_type!="lab"}) by (site) > 96 * 3600
+      for: 5m
+      labels:
+        severity: major
+        site: '{{ $labels.site }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. RCCS earliest segment is older than 96 hours, but not be purged.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. RCCS earliest segment is older than 96 hours, but not be purged. (segment start time is: {{ $value }})
+    - alert: Nats Routers Member Too Low
+      expr: sum(nats_varz_routes{site=~".+", site_type!="lab"}) by (site, app, peer) < 2
+      for: 2m
+      labels:
+        severity: major
+        site: '{{ $labels.site }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Nats routers member too low.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Routers member of {{ $labels.app }}-{{ $labels.peer }} is lower than 2 in past 2 minutes. (current value is: {{ $value }})
+    - alert: Nats Connections Too High
+      expr: sum(nats_varz_connections{site=~".+", site_type!="lab"}) by (site, app, peer) > 10000
+      for: 2m
+      labels:
+        severity: major
+        site: '{{ $labels.site }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Nats connections too high.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Nats connections of {{ $labels.app }}-{{ $labels.peer }} is higher than 10000 in past 2 minutes. (current value is: {{ $value }})
+    - alert: Nats Subscriptions Too High
+      expr: sum(nats_varz_subscriptions{site=~".+", site_type!="lab"}) by (site, app, peer) > 100000
+      for: 2m
+      labels:
+        severity: major
+        site: '{{ $labels.site }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Nats subscriptions too high.
+        description: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. Nats subscriptions of {{ $labels.app }}-{{ $labels.peer }} is higher than 100000 in past 2 minutes. (current value is: {{ $value }})
+    - alert: Timeline Marker Position has not been changed for a long time
+      expr: increase(rio_total_number_mark_position_reset{ISID=".+", SpanName="NumMarkPositionReset", site=~".+", site_type!="lab"}[72h]) == 0
+      for: 6h
+      labels:
+        severity: major
+        isid: '{{ $labels.ISID }}'
+        site: '{{ $labels.site }}'
+        spanName: '{{ $labels.SpanName }}'
+        service: '{{ $labels.app }} {{ $labels.job }}'
+        instance: '{{ $labels.instance }} {{ $labels.SpanName }}'
+      annotations:
+        app: '{{ $labels.app }}'
+        site: '{{ $labels.site }}'
+        value: '{{ $value }}'
+        summary: |-
+          Site: {{ $labels.site }}
+          App: {{ $labels.app }}. TimelineMarkerPosition not changed
+        description: "Site: {{ $labels.site }}\nApp: {{ $labels.app }}. TimelineMarkerPosition for stream {{ $labels.ISID }} has not been changed for 72 hours. "
+

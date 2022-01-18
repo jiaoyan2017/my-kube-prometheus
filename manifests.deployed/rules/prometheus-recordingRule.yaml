@@ -1,0 +1,315 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 2.27.1
+    role: recording-rules
+  name: prometheus-recording-rules
+  namespace: rio
+spec:
+  groups:
+  - name: recording-rules
+    rules:
+    - record: job:http_request_duration:rounded_average
+      expr: round(avg(sum(Rate:rio_http_request_success_duration_millis_sum:5m) By (SpanName, app, site, site_type)/sum(Rate:rio_http_request_success_duration_millis_count:5m) By (SpanName, app, site, site_type)) By (SpanName, app, site, site_type), 0.0001)
+    - record: job:http_service_duration:rounded_average
+      expr: round(avg(sum(Rate:rio_http_service_success_duration_millis_sum:5m) By (SpanName, app, site, site_type)/sum(Rate:rio_http_service_success_duration_millis_count:5m) By (SpanName, app, site, site_type)) By (SpanName, app, site, site_type), 0.0001)
+    - record: job:http_request_duration:fail_percent
+      expr: round(sum(Rate:rio_http_request_fail_duration_millis_count:5m) By (SpanName, app, site, site_type)/ (sum(Rate:rio_http_request_success_duration_millis_count:5m) By (SpanName, app, site, site_type) + sum(Rate:rio_http_request_fail_duration_millis_count:5m) By (SpanName, app, site, site_type)), 0.0001) * 100
+    - record: job:http_service_duration:fail_percent
+      expr: round(sum(Rate:rio_http_service_fail_duration_millis_count:5m) By (SpanName, app, site, site_type)/ (sum(Rate:rio_http_service_success_duration_millis_count:5m) By (SpanName, app, site, site_type) + sum(Rate:rio_http_service_fail_duration_millis_count:5m) By (SpanName, app, site, site_type)), 0.0001) * 100
+    - record: job:rio_http_service_success:success_percent
+      expr: (sum(Rate:rio_http_service_success_duration_millis_count:5m{SpanName="Segment Storer Handler"}) by (SpanName, app, site, site_type) / (sum(Rate:rio_http_service_success_duration_millis_count:5m{SpanName="Segment Storer Handler"}) by (SpanName, app, site, site_type) + sum(Rate:rio_http_service_fail_duration_millis_count:5m{SpanName="Segment Storer Handler"}) by (SpanName, app, site, site_type))) * 100
+    - record: Rate:rio_http_service_success_duration_millis_sum:1m
+      expr: rate(rio_http_service_success_duration_millis_sum{}[1m])
+    - record: Rate:rio_http_service_success_duration_millis_sum:5m
+      expr: rate(rio_http_service_success_duration_millis_sum{}[5m])
+    - record: Rate:rio_http_service_success_duration_millis_count:1m
+      expr: rate(rio_http_service_success_duration_millis_count{}[1m])
+    - record: Rate:rio_http_service_success_duration_millis_count:5m
+      expr: rate(rio_http_service_success_duration_millis_count{}[5m])
+    - record: Rate:rio_http_service_success_duration_millis_bucket:1m
+      expr: rate(rio_http_service_success_duration_millis_bucket{}[1m])
+    - record: Rate:rio_http_service_success_duration_millis_bucket:5m
+      expr: rate(rio_http_service_success_duration_millis_bucket{}[5m])
+    - expr: rate(rio_http_service_fail_duration_millis_count{}[1m])
+      record: Rate:rio_http_service_fail_duration_millis_count:1m
+    - expr: rate(rio_http_service_fail_duration_millis_count{}[5m])
+      record: Rate:rio_http_service_fail_duration_millis_count:5m
+    - record: Rate:rio_http_service_fail_duration_millis_sum:1m
+      expr: rate(rio_http_service_fail_duration_millis_sum{}[1m])
+    - record: Rate:rio_http_service_fail_duration_millis_sum:5m
+      expr: rate(rio_http_service_fail_duration_millis_sum{}[5m])
+    - record: Rate:rio_http_service_fail_duration_millis_bucket:1m
+      expr: rate(rio_http_service_fail_duration_millis_bucket{}[1m])
+    - record: Rate:rio_http_service_fail_duration_millis_bucket:5m
+      expr: rate(rio_http_service_fail_duration_millis_bucket{}[5m])
+    - record: Rate:rio_http_request_success_duration_millis_count:1m
+      expr: rate(rio_http_request_success_duration_millis_count{}[1m])
+    - record: Rate:rio_http_request_success_duration_millis_count:5m
+      expr: rate(rio_http_request_success_duration_millis_count{}[5m])
+    - record: Rate:rio_http_request_fail_duration_millis_count:1m
+      expr: rate(rio_http_request_fail_duration_millis_count{}[1m])
+    - record: Rate:rio_http_request_fail_duration_millis_count:5m
+      expr: rate(rio_http_request_fail_duration_millis_count{}[5m])
+    - record: Rate:rio_http_request_success_duration_millis_sum:1m
+      expr: rate(rio_http_request_success_duration_millis_sum{}[1m])
+    - record: Rate:rio_http_request_success_duration_millis_sum:5m
+      expr: rate(rio_http_request_success_duration_millis_sum{}[5m])
+    - record: Rate:rio_http_request_fail_duration_millis_sum:1m
+      expr: rate(rio_http_request_fail_duration_millis_sum{}[1m])
+    - record: Rate:rio_http_request_fail_duration_millis_sum:5m
+      expr: rate(rio_http_request_fail_duration_millis_sum{}[5m])
+    - record: Rate:rio_http_request_fail_duration_millis_bucket:1m
+      expr: rate(rio_http_request_fail_duration_millis_bucket{}[1m])
+    - record: Rate:rio_http_request_fail_duration_millis_bucket:5m
+      expr: rate(rio_http_request_fail_duration_millis_bucket{}[5m])
+    - record: Rate:rio_http_request_success_duration_millis_bucket:1m
+      expr: rate(rio_http_request_success_duration_millis_bucket{}[1m])
+    - record: Rate:rio_http_request_success_duration_millis_bucket:5m
+      expr: rate(rio_http_request_success_duration_millis_bucket{}[5m])
+    - record: Rate:rio_memsql_request_success_duration_millis_sum:1m
+      expr: rate(rio_memsql_request_success_duration_millis_sum{}[1m])
+    - record: Rate:rio_memsql_request_success_duration_millis_sum:5m
+      expr: rate(rio_memsql_request_success_duration_millis_sum{}[5m])
+    - record: Rate:rio_memsql_request_success_duration_millis_count:1m
+      expr: rate(rio_memsql_request_success_duration_millis_count{}[1m])
+    - record: Rate:rio_memsql_request_success_duration_millis_count:5m
+      expr: rate(rio_memsql_request_success_duration_millis_count{}[5m])
+    - record: Rate:rio_memsql_request_fail_duration_millis_count:1m
+      expr: rate(rio_memsql_request_fail_duration_millis_count{}[1m])
+    - record: Rate:rio_memsql_request_fail_duration_millis_count:5m
+      expr: rate(rio_memsql_request_fail_duration_millis_count{}[5m])
+    - record: Rate:rio_memsql_request_success_duration_millis_bucket:1m
+      expr: rate(rio_memsql_request_success_duration_millis_bucket{}[1m])
+    - record: Rate:rio_memsql_request_success_duration_millis_bucket:5m
+      expr: rate(rio_memsql_request_success_duration_millis_bucket{}[5m])
+    - record: Rate:rio_fmc2_decoder_http_request_duration_millis_count:5m
+      expr: rate(rio_fmc2_decoder_http_request_duration_millis_count{}[5m])
+    - record: Rate:rio_fmc2_decoder_http_request_duration_millis_sum:5m
+      expr: rate(rio_fmc2_decoder_http_request_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_decoder_decoding_duration_millis_count:5m
+      expr: rate(rio_fmc2_decoder_decoding_duration_millis_count{}[5m])
+    - record: Rate:rio_fmc2_decoder_decoding_duration_millis_sum:5m
+      expr: rate(rio_fmc2_decoder_decoding_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_disposer_cb_duration_count:5m
+      expr: rate(rio_fmc2_disposer_cb_duration_count{}[5m])
+    - record: Rate:rio_fmc2_disposer_cb_duration_sum:5m
+      expr: rate(rio_fmc2_disposer_cb_duration_sum{}[5m])
+    - record: Rate:rio_fmc2_disposer_job_duration_count:5m
+      expr: rate(rio_fmc2_disposer_job_duration_count{}[5m])
+    - record: Rate:rio_fmc2_disposer_job_duration_sum:5m
+      expr: rate(rio_fmc2_disposer_job_duration_sum{}[5m])
+    - record: Rate:rio_fmc2_disposer_request_duration_count:5m
+      expr: rate(rio_fmc2_disposer_request_duration_count{}[5m])
+    - record: Rate:rio_fmc2_disposer_request_duration_sum:5m
+      expr: rate(rio_fmc2_disposer_request_duration_sum{}[5m])
+    - record: Rate:rio_fmc2_disposer_seg_duration_count:5m
+      expr: rate(rio_fmc2_disposer_seg_duration_count{}[5m])
+    - record: Rate:rio_fmc2_disposer_seg_duration_sum:5m
+      expr: rate(rio_fmc2_disposer_seg_duration_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_cleversafe_http_request_duration_millis_count:5m
+      expr: rate(rio_fmc2_encoder_cleversafe_http_request_duration_millis_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_cleversafe_http_request_duration_millis_sum:5m
+      expr: rate(rio_fmc2_encoder_cleversafe_http_request_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_encoded_duration_millis_count:5m
+      expr: rate(rio_fmc2_encoder_encoded_duration_millis_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_encoded_duration_millis_sum:5m
+      expr: rate(rio_fmc2_encoder_encoded_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_encoding_algorithm_duration_millis_sum:5m
+      expr: rate(rio_fmc2_encoder_encoding_algorithm_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_encoding_algorithm_duration_millis_count:5m
+      expr: rate(rio_fmc2_encoder_encoding_algorithm_duration_millis_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_http_service_duration_millis_count:5m
+      expr: rate(rio_fmc2_encoder_http_service_duration_millis_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_http_service_duration_millis_sum:5m
+      expr: rate(rio_fmc2_encoder_http_service_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_pillar_http_request_duration_millis_count:5m
+      expr: rate(rio_fmc2_encoder_pillar_http_request_duration_millis_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_pillar_http_request_duration_millis_sum:5m
+      expr: rate(rio_fmc2_encoder_pillar_http_request_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_byte_from_encoder_count:5m
+      expr: rate(rio_fmc2_encoder_segment_byte_from_encoder_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_byte_from_encoder_sum:5m
+      expr: rate(rio_fmc2_encoder_segment_byte_from_encoder_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_byte_from_pillar_count:5m
+      expr: rate(rio_fmc2_encoder_segment_byte_from_pillar_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_byte_from_pillar_sum:5m
+      expr: rate(rio_fmc2_encoder_segment_byte_from_pillar_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_commondata_byte_count:5m
+      expr: rate(rio_fmc2_encoder_segment_commondata_byte_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_commondata_byte_sum:5m
+      expr: rate(rio_fmc2_encoder_segment_commondata_byte_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_encoded_byte_count:5m
+      expr: rate(rio_fmc2_encoder_segment_encoded_byte_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_encoded_byte_sum:5m
+      expr: rate(rio_fmc2_encoder_segment_encoded_byte_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_total:5m
+      expr: rate(rio_fmc2_encoder_segment_total{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_userdata_byte_count:5m
+      expr: rate(rio_fmc2_encoder_segment_userdata_byte_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_segment_userdata_byte_sum:5m
+      expr: rate(rio_fmc2_encoder_segment_userdata_byte_sum{}[5m])
+    - record: Rate:rio_fmc2_fa_pub_segment_bundle_duration_count:5m
+      expr: rate(rio_fmc2_fa_pub_segment_bundle_duration_count{}[5m])
+    - record: Rate:rio_fmc2_fa_pub_segment_bundle_duration_sum:5m
+      expr: rate(rio_fmc2_fa_pub_segment_bundle_duration_sum{}[5m])
+    - record: Rate:rio_fmc2_fa_seg_bundle_duration_count:5m
+      expr: rate(rio_fmc2_fa_seg_bundle_duration_count{}[5m])
+    - record: Rate:rio_fmc2_fa_seg_bundle_duration_sum:5m
+      expr: rate(rio_fmc2_fa_seg_bundle_duration_sum{}[5m])
+    - record: Rate:rio_fmc2_fmc2_ric_cache_access:5m
+      expr: rate(rio_fmc2_fmc2_ric_cache_access{}[5m])
+    - record: Rate:rio_fmc2_ric_client_http_request_duration_millis_count:5m
+      expr: rate(rio_fmc2_ric_client_http_request_duration_millis_count{}[5m])
+    - record: Rate:rio_fmc2_ric_client_http_request_duration_millis_sum:5m
+      expr: rate(rio_fmc2_ric_client_http_request_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_ric_server_http_request_duration_millis_count:5m
+      expr: rate(rio_fmc2_ric_server_http_request_duration_millis_count{}[5m])
+    - record: Rate:rio_fmc2_ric_server_http_request_duration_millis_sum:5m
+      expr: rate(rio_fmc2_ric_server_http_request_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_ric_server_http_request_total_received:5m
+      expr: rate(rio_fmc2_ric_server_http_request_total_received{}[5m])
+    - record: job:rio_fmc2_decoder_http_request_success_percent:rounded
+      expr: 100 * round(sum(Rate:rio_fmc2_decoder_http_request_duration_millis_count:5m{status="success",subcomponent="server"}) by (site, site_type, app) / sum(Rate:rio_fmc2_decoder_http_request_duration_millis_count:5m{subcomponent="server"})  by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_decoder_http_response:rounded
+      expr: round(sum(Rate:rio_fmc2_decoder_http_request_duration_millis_sum:5m{subcomponent="server"}) by (site, site_type, app)/ sum(Rate:rio_fmc2_decoder_http_request_duration_millis_count:5m{subcomponent="server"})  by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_decoder_cleversafe_http_request_success_percent:rounded
+      expr: 100 * round(sum(Rate:rio_fmc2_decoder_http_request_duration_millis_count:5m{status="success",subcomponent="fetcher"}) by (site, site_type, app) / sum(Rate:rio_fmc2_decoder_http_request_duration_millis_count:5m{subcomponent="fetcher"})  by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_decoder_cleversafe_http_response:rounded
+      expr: round(sum(Rate:rio_fmc2_decoder_http_request_duration_millis_sum:5m{subcomponent="fetcher"}) by (site, site_type, app) / sum(Rate:rio_fmc2_decoder_http_request_duration_millis_count:5m{subcomponent="fetcher"}) by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_encoder_http_request_success_percent:rounded
+      expr: 100 * round(sum(Rate:rio_fmc2_encoder_encoded_duration_millis_count:5m{status="success"}) by (site, site_type, app) / sum(Rate:rio_fmc2_encoder_encoded_duration_millis_count:5m)  by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_encoder_http_request_rate:rounded
+      expr: round(sum(rate(rio_fmc2_encoder_encoded_duration_millis_count{}[30m])) by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_encoder_http_response:rounded
+      expr: round(sum(Rate:rio_fmc2_encoder_encoded_duration_millis_sum:5m) by (site, site_type, app) / sum(Rate:rio_fmc2_encoder_encoded_duration_millis_count:5m)  by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_encoder_user_compression_percent:rounded
+      expr: 100 * round(1- sum(rate(rio_fmc2_encoder_segment_byte_from_encoder_sum[5m])) by (site, site_type, app) / sum(rate(rio_fmc2_encoder_segment_byte_from_pillar_sum[5m])) by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_encoder_cleversafe_http_request_duration:rounded
+      expr: round(sum(Rate:rio_fmc2_encoder_cleversafe_http_request_duration_millis_sum:5m) by (site, site_type, app)/ sum(Rate:rio_fmc2_encoder_cleversafe_http_request_duration_millis_count:5m)  by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_encoder_cleversafe_http_success_percent:rounded
+      expr: 100 * round(sum(Rate:rio_fmc2_encoder_cleversafe_http_request_duration_millis_count:5m{status="success"}) by (site, site_type, app)/ sum(Rate:rio_fmc2_encoder_cleversafe_http_request_duration_millis_count:5m) by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_encoder_pillar_http_request_duration:rounded
+      expr: round(sum(Rate:rio_fmc2_encoder_pillar_http_request_duration_millis_sum:5m) by (site, site_type, app)/ sum(Rate:rio_fmc2_encoder_pillar_http_request_duration_millis_count:5m) by (site, site_type, app), 0.0001)
+    - record: job:rio_fmc2_encoder_pillar_http_success_percent:rounded
+      expr: 100 * round(sum(Rate:rio_fmc2_encoder_pillar_http_request_duration_millis_count:5m{status="success"}) by (site, site_type, app)/ sum(Rate:rio_fmc2_encoder_pillar_http_request_duration_millis_count:5m) by (site, site_type, app), 0.0001)
+    - record: Rate:rio_rccs_http_client_duration_millis_sum:5m
+      expr: rate(rio_rccs_http_client_duration_millis_sum{}[5m])
+    - record: Rate:rio_rccs_http_client_duration_millis_count:5m
+      expr: rate(rio_rccs_http_client_duration_millis_count{}[5m])
+    - record: Rate:rio_rccs_memsql_duration_millis_sum:5m
+      expr: rate(rio_rccs_memsql_duration_millis_sum{}[5m])
+    - record: Rate:rio_rccs_memsql_duration_millis_count:5m
+      expr: rate(rio_rccs_memsql_duration_millis_count{}[5m])
+    - record: Rate:rio_rccs_segment_size_byte_sum:5m
+      expr: rate(rio_rccs_segment_size_byte_sum{}[5m])
+    - record: Rate:rio_rccs_segment_size_byte_count:5m
+      expr: rate(rio_rccs_segment_size_byte_count{}[5m])
+    - record: Rate:rio_rccs_serve_duration_millis_sum:5m
+      expr: rate(rio_rccs_serve_duration_millis_sum{}[5m])
+    - record: Rate:rio_rccs_serve_duration_millis_count:5m
+      expr: rate(rio_rccs_serve_duration_millis_count{}[5m])
+    - record: Rate:rio_rccs_segment_batch_delete_num_sum:5m
+      expr: rate(rio_rccs_segment_batch_delete_num_sum{}[5m])
+    - record: Rate:rio_rccs_segment_batch_delete_num_count:5m
+      expr: rate(rio_rccs_segment_batch_delete_num_count{}[5m])
+    - record: Rate:rio_rccs_nss_client_duration_millis_sum:5m
+      expr: rate(rio_rccs_nss_client_duration_millis_sum{}[5m])
+    - record: Rate:rio_rccs_nss_client_duration_millis_count:5m
+      expr: rate(rio_rccs_nss_client_duration_millis_count{}[5m])
+    - record: Delta:rio_rccs_serve_duration_millis_count:5m
+      expr: delta(rio_rccs_serve_duration_millis_count{}[5m])
+    - record: Delta:rio_rccs_segment_size_byte_sum:5m
+      expr: delta(rio_rccs_segment_size_byte_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_pillar_http_client_duration_millis_sum:5m
+      expr: rate(rio_fmc2_encoder_pillar_http_client_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_pillar_http_client_duration_millis_count:5m
+      expr: rate(rio_fmc2_encoder_pillar_http_client_duration_millis_count{}[5m])
+    - record: Rate:rio_fmc2_encoder_cleversafe_http_client_duration_millis_sum:5m
+      expr: rate(rio_fmc2_encoder_cleversafe_http_client_duration_millis_sum{}[5m])
+    - record: Rate:rio_fmc2_encoder_cleversafe_http_client_duration_millis_count:5m
+      expr: rate(rio_fmc2_encoder_cleversafe_http_client_duration_millis_count{}[5m])
+    - record: Delta:rio_fmc2_encoder_segment_byte_from_encoder_sum:5m
+      expr: delta(rio_fmc2_encoder_segment_byte_from_encoder_sum{}[5m])
+    - record: Delta:rio_fmc2_encoder_segment_byte_from_pillar_sum:5m
+      expr: delta(rio_fmc2_encoder_segment_byte_from_pillar_sum{}[5m])
+    - record: count:rio_rccs_pod_num
+      expr: count(sum(rio_rccs_serve_duration_millis_count{}) by (app, instance)) by (app)
+    - record: job:rio_rccs_serve_http_request_rate:rounded
+      expr: round(sum(Rate:rio_rccs_serve_duration_millis_count:5m{status="success"}) by (site, app, layer, site_type), 0.0001)
+    - record: job:rio_rccs_serve_http_request_success_percent:rounded
+      expr: 100 * round(sum(Rate:rio_rccs_serve_duration_millis_count:5m{status="success"}) by (site, app, layer, site_type) / sum(Rate:rio_rccs_serve_duration_millis_count:5m{})  by (site, app, layer, site_type), 0.0001)
+    - record: job:rio_rccs_server_http_response:rounded
+      expr: round(sum(Rate:rio_rccs_serve_duration_millis_sum:5m{}) by (site, app, layer, site_type)/ sum(Rate:rio_rccs_serve_duration_millis_count:5m{})  by (site, app, layer, site_type), 0.0001)
+    - record: job:rio_rccs_cleversafe_http_success_percent:rounded
+      expr: 100 * round(sum(Rate:rio_rccs_http_client_duration_millis_count:5m{peer="cleversafe", status="success"}) by (site, app, layer, site_type) / sum(Rate:rio_rccs_http_client_duration_millis_count:5m{peer="cleversafe"}) by (site, app, layer, site_type), 0.0001)
+    - record: job:rio_rccs_cleversafe_http_response:rounded
+      expr: round(sum(Rate:rio_rccs_http_client_duration_millis_sum:5m{peer="cleversafe"}) by (site, app, layer, site_type) / sum(Rate:rio_rccs_http_client_duration_millis_count:5m{peer="cleversafe"}) by (site, app, layer, site_type), 0.0001)
+    - record: job:rio_rccs_pillar_http_success_percent:rounded
+      expr: 100 * round(sum(Rate:rio_rccs_http_client_duration_millis_count:5m{peer="pillar", status="success"}) by (site, app, site_type) / sum(Rate:rio_rccs_http_client_duration_millis_count:5m{peer="pillar"}) by (site, app, site_type), 0.0001)
+    - record: job:rio_rccs_pillar_http_response:rounded
+      expr: round(sum(Rate:rio_rccs_http_client_duration_millis_sum:5m{peer="pillar"}) by (site, app, site_type) / sum(Rate:rio_rccs_http_client_duration_millis_count:5m{peer="pillar"}) by (site, app, site_type), 0.0001)
+    - record: job:rio_rccs_encoder_user_compression_percent:rounded
+      expr: 100 * round(1- sum(Rate:rio_rccs_segment_size_byte_sum:5m{app="rccs_encoder",peer="ric"}) by (site, app, site_type) / sum(Rate:rio_rccs_segment_size_byte_sum:5m{app="rccs_encoder",peer="pillar"}) by (site, app, site_type), 0.0001)
+    - record: job:rio_rccs_fa_publish_segment_bundle_success_percent:rounded
+      expr: 100 * round(sum(Rate:rio_rccs_nss_client_duration_millis_count:5m{status="success"}) by (site, app, site_type) / sum(Rate:rio_rccs_nss_client_duration_millis_count:5m{}) by (site, app, site_type), 0.0001)
+    - record: job:rio_fmc2_encoder_cleversafe_http_client_duration:rounded
+      expr: round(sum(Rate:rio_fmc2_encoder_cleversafe_http_client_duration_millis_sum:5m) by (site, app, site_type)/ sum(Rate:rio_fmc2_encoder_cleversafe_http_client_duration_millis_count:5m)  by (site, app, site_type), 0.0001)
+    - record: job:rio_fmc2_encoder_pillar_http_client_duration:rounded
+      expr: round(sum(Rate:rio_fmc2_encoder_pillar_http_client_duration_millis_sum:5m) by (site, app, site_type)/ sum(Rate:rio_fmc2_encoder_pillar_http_client_duration_millis_count:5m) by (site, app, site_type), 0.0001)
+    - record: job:rio_rccs_disposer_job_finished_percent:rounded
+      expr: 100 * round(sum(delta(rio_rccs_job_duration_millis_count{app="rccs_disposer", status="complete"}[24h])) by (site, app, site_type) / sum(delta(rio_rccs_job_duration_millis_count{app="rccs_disposer", status="dispatched"}[24h])) by (site, app, site_type), 0.0001)
+    - record: job:rio_rccs_disposer_memsql_delete_duration:rounded
+      expr: round(sum(Rate:rio_rccs_memsql_duration_millis_sum:5m{app="rccs_disposer", status="success", ops="delete", type="segment"}) by (app, site, site_type) / sum(Rate:rio_rccs_memsql_duration_millis_count:5m{app="rccs_disposer", status="success", ops="delete", type="segment"}) by (app, site, site_type), 0.0001)
+    - record: Rate:rio_mpd_monitor_validate_mpd:5m
+      expr: rate(rio_mpd_monitor_validate_mpd{}[5m])
+    - record: Rate:rio_mpd_monitor_result_del_duration_millis_sum:5m
+      expr: rate(rio_mpd_monitor_result_del_duration_millis_sum{}[5m])
+    - record: Rate:rio_mpd_monitor_result_del_duration_millis_count:5m
+      expr: rate(rio_mpd_monitor_result_del_duration_millis_count{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_livepoint_publishtime_diff_in_seconds_sum:5m
+      expr: rate(rio_mpd_monitor_mpd_livepoint_publishtime_diff_in_seconds_sum{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_livepoint_publishtime_diff_in_seconds_count:5m
+      expr: rate(rio_mpd_monitor_mpd_livepoint_publishtime_diff_in_seconds_count{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_livepoint_publishtime_diff_in_seconds_bucket:5m
+      expr: rate(rio_mpd_monitor_mpd_livepoint_publishtime_diff_in_seconds_bucket{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_systime_publishtime_diff_in_seconds_sum:5m
+      expr: rate(rio_mpd_monitor_mpd_systime_publishtime_diff_in_seconds_sum{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_systime_publishtime_diff_in_seconds_count:5m
+      expr: rate(rio_mpd_monitor_mpd_systime_publishtime_diff_in_seconds_count{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_systime_publishtime_diff_in_seconds_bucket:5m
+      expr: rate(rio_mpd_monitor_mpd_systime_publishtime_diff_in_seconds_bucket{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_systime_livepoint_diff_in_seconds_sum:5m
+      expr: rate(rio_mpd_monitor_mpd_systime_livepoint_diff_in_seconds_sum{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_systime_livepoint_diff_in_seconds_count:5m
+      expr: rate(rio_mpd_monitor_mpd_systime_livepoint_diff_in_seconds_count{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_systime_livepoint_diff_in_seconds_bucket:5m
+      expr: rate(rio_mpd_monitor_mpd_systime_livepoint_diff_in_seconds_bucket{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_download_duration_millis_sum:5m
+      expr: rate(rio_mpd_monitor_mpd_download_duration_millis_sum{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_download_duration_millis_count:5m
+      expr: rate(rio_mpd_monitor_mpd_download_duration_millis_count{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_size_byte_sum:5m
+      expr: rate(rio_mpd_monitor_mpd_size_byte_sum{}[5m])
+    - record: Rate:rio_mpd_monitor_mpd_size_byte_count:5m
+      expr: rate(rio_mpd_monitor_mpd_size_byte_count{}[5m])
+    - record: Rate:rio_mpd_monitor_segment_head_duration_millis_sum:5m
+      expr: rate(rio_mpd_monitor_segment_head_duration_millis_sum{}[5m])
+    - record: Rate:rio_mpd_monitor_segment_head_duration_millis_count:5m
+      expr: rate(rio_mpd_monitor_segment_head_duration_millis_count{}[5m])
+    - record: Rate:rio_mpd_monitor_result_save_duration_millis_sum:5m
+      expr: rate(rio_mpd_monitor_result_save_duration_millis_sum{}[5m])
+    - record: Rate:rio_mpd_monitor_result_save_duration_millis_count:5m
+      expr: rate(rio_mpd_monitor_result_save_duration_millis_count{}[5m])
+    - record: Rate:rio_mpd_monitor_result_size_byte_sum:5m
+      expr: rate(rio_mpd_monitor_result_size_byte_sum{}[5m])
+    - record: Rate:rio_mpd_monitor_result_size_byte_count:5m
+      expr: rate(rio_mpd_monitor_result_size_byte_count{}[5m])
+    - record: Rate:rio_mpd_monitor_add_status_db_duration_millis_sum:5m
+      expr: rate(rio_mpd_monitor_add_status_db_duration_millis_sum{}[5m])
+    - record: Rate:rio_mpd_monitor_add_status_db_duration_millis_count:5m
+      expr: rate(rio_mpd_monitor_add_status_db_duration_millis_count{}[5m])

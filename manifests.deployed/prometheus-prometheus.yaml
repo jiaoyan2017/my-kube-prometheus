@@ -1,0 +1,57 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  labels:
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 2.29.1
+    prometheus: k8s
+  name: k8s
+  namespace: rio
+spec:
+  alerting:
+    alertmanagers:
+    - apiVersion: v2
+      name: alertmanager-main
+      namespace: rio
+      port: web
+  enableFeatures: []
+  evaluationInterval: 15s
+  externalLabels: {}
+  image: quay.io/prometheus/prometheus:v2.29.1
+  nodeSelector:
+    kubernetes.io/os: linux
+  podMetadata:
+    labels:
+      app.kubernetes.io/component: prometheus
+      app.kubernetes.io/name: prometheus
+      app.kubernetes.io/part-of: kube-prometheus
+      app.kubernetes.io/version: 2.29.1
+  podMonitorNamespaceSelector: {}
+  podMonitorSelector: {}
+  probeNamespaceSelector: {}
+  probeSelector: {}
+  remoteWrite:
+  - url: http://172.31.5.206:8428/api/v1/write
+  replicas: 1
+  resources:
+    limits:
+      cpu: 4
+      memory: 10Gi
+    requests:
+      cpu: 500m
+      memory: 400Mi
+  ruleNamespaceSelector: {}
+  ruleSelector: {}
+  scrapeInterval: 15s
+  scrapeTimeout: 15s
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountName: prometheus-k8s
+  serviceMonitorNamespaceSelector: {}
+  serviceMonitorSelector: {}
+  shards: 6
+  version: 2.29.1
